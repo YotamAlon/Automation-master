@@ -1,0 +1,38 @@
+<MainWindow>:
+	background_image: [to be added]
+	
+<ScriptPage>:
+	BoxLayout:
+		id: mainview
+		Label:
+			size_hint_y: .1
+			text = root.script_name
+			font_size: self.height -10
+		Button:
+			pos_hint: 0, 0
+			text: "run " + root.script_name
+		
+<StringInput>:
+	Label:
+		size_hint_y: .2
+		text: self.input_name
+		font_size: self.height -10
+	Label:
+		size_hint_y: .1
+		text: self.input_help
+		font_size: self.height -10
+	TextInput:
+		on_text_change: self.input_value = self.text #need to change function name
+		
+<FileInput>:
+	Label:
+		size_hint_y: .2
+		text: self.input_name
+		font_size: self.height -10
+	Label:
+		size_hint_y: .1
+		text: self.input_help
+		font_size: self.height -10
+	Button:
+		text: 'Choose File'
+		on_press: root.open_popup()
