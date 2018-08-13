@@ -23,9 +23,9 @@
 #         dismiss_func()
 
 
-from kivy.uix.boxlayout import BoxLayout
+from kivy.uix.textinput import TextInput
 from kivy.properties import StringProperty
-class StringInput(BoxLayout):
+class StringInput(TextInput):
     input_name = StringProperty()
     input_value = StringProperty()
     default = StringProperty()
@@ -37,7 +37,13 @@ class StringInput(BoxLayout):
 
 
 from kivy.uix.tabbedpanel import TabbedPanelItem
+from kivy.properties import StringProperty, ObjectProperty, ListProperty
 class ScriptPage(TabbedPanelItem):
+    script_name = StringProperty()
+    main = ObjectProperty()
+    status = StringProperty()
+    output = ListProperty()
+
     def __init__(self, script):
         super(ScriptPage, self).__init__()
         self.script_name = script
@@ -50,13 +56,22 @@ class ScriptPage(TabbedPanelItem):
     def parse_script_inputs(self):
         from importlib import import_module
         try:
-            main = import_module('main', '.' + self.script_name)
-        except ImportError:
-            self.bad = True
+            module = import_module(self.script_name.split('.')[0])
+            self.main = getattr(module, 'main')
+        except ImportError as e:
+            print(e)
+            self.status = 'ERROR!'
             return []
+        self.status = 'Script Loaded'
 
-        from inspect import Signature
-        return Signature(main).parameters
+        from inspect import signature
+        return signature(self.main).parameters
+
+    def run_script(self):
+        from CaptureStdout import CaptureStdout
+        with CaptureStdout() as output:
+            self.main(*[child.input_value for child in self.children])
+        self.output = output
 
 
 from kivy.uix.tabbedpanel import TabbedPanel
@@ -65,7 +80,7 @@ class MainWindow(TabbedPanel):
         super(MainWindow, self).__init__(**kwargs)
         import os
         for curfile in os.listdir(os.getcwd()):
-            if curfile.endswith(".py"):
+            if curfile.endswith(".py") and curfile != __file__.split('/')[-1] and curfile.lower() == curfile:
                 self.add_widget(ScriptPage(script=curfile))
 
 

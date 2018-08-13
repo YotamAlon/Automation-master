@@ -1,17 +1,19 @@
 <MainWindow>:
     do_default_tab: False
 
-    <ScriptPage>:
-        text: self.script_name
-        BoxLayout:
-            id: mainview
-            Label:
-                size_hint_y: .1
-                text = root.script_name
-                font_size: self.height -10
-            Button:
-                pos_hint: 0, 0
-                text: "run " + root.script_name
+<ScriptPage>:
+    text: self.script_name
+    BoxLayout:
+        size_hint: (0.5, 0.2)
+        Label:
+            text: root.status
+        Button:
+            pos: 1, 1
+            text: "run " + root.script_name
+            on_press: root.run_script()
+        TextInput:
+            multiline: True
+            text: '\n'.join(root.output)
 
 <StringInput>:
     Label:
