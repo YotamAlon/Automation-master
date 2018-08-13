@@ -74,8 +74,8 @@
             height: 30
             Button:
                 text: "Cancel"
-                on_release: root.cancel()
+                on_release: root.dismiss()
 
             Button:
                 text: "Load"
-                on_release: root.load(filechooser.path, filechooser.selection)
+                on_release: app.window.add_script(filechooser.path, filechooser.selection, action=root.dismiss)

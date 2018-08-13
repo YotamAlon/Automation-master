@@ -23,13 +23,6 @@
 #         dismiss_func()
 
 
-from kivy.uix.floatlayout import FloatLayout
-from kivy.properties import ObjectProperty
-class LoadDialog(FloatLayout):
-    load = ObjectProperty(None)
-    cancel = ObjectProperty(None)
-
-
 from kivy.uix.textinput import TextInput
 from kivy.properties import StringProperty
 class StringInput(TextInput):
@@ -47,13 +40,15 @@ from kivy.uix.tabbedpanel import TabbedPanelItem
 from kivy.properties import StringProperty, ObjectProperty, ListProperty
 class ScriptPage(TabbedPanelItem):
     script_name = StringProperty()
+    script_path = StringProperty()
     main = ObjectProperty()
     status = StringProperty()
     output = ListProperty()
 
-    def __init__(self, script):
+    def __init__(self, script_name, script_path):
         super(ScriptPage, self).__init__()
-        self.script_name = script
+        self.script_name = script_name
+        self.script_path = script_path
         self.params = self.parse_script_inputs()
 
         for param in self.params:
@@ -61,9 +56,12 @@ class ScriptPage(TabbedPanelItem):
             self.add_widget(StringInput(param.name, param.default if param.default != param.empty else None))
 
     def parse_script_inputs(self):
-        from importlib import import_module
+        from importlib.util import spec_from_file_location, module_from_spec
         try:
-            module = import_module(self.script_name.split('.')[0])
+            import os
+            spec = spec_from_file_location('main', os.path.join(self.script_path, self.script_name))
+            module = module_from_spec(spec)
+            spec.loader.exec_module(module)
             self.main = getattr(module, 'main')
         except ImportError as e:
             print(e)
@@ -81,28 +79,28 @@ class ScriptPage(TabbedPanelItem):
         self.output = output
 
 
+from kivy.uix.floatlayout import FloatLayout
+from kivy.properties import ObjectProperty
+class LoadDialog(FloatLayout):
+    dismiss = ObjectProperty()
+
+
 from kivy.uix.tabbedpanel import TabbedPanelItem
 from kivy.properties import ObjectProperty
 class ManageScripts(TabbedPanelItem):
-    loadfile = ObjectProperty(None)
-    savefile = ObjectProperty(None)
-    text_input = ObjectProperty(None)
+    loadfile = ObjectProperty()
+    savefile = ObjectProperty()
+    text_input = ObjectProperty()
 
     def dismiss_popup(self):
         self._popup.dismiss()
 
     def show_load(self):
-        content = LoadDialog(load=self.load, cancel=self.dismiss_popup)
+        content = LoadDialog(dismiss=self.dismiss_popup)
         from kivy.uix.popup import Popup
         self._popup = Popup(title="Load file", content=content,
                             size_hint=(0.9, 0.9))
         self._popup.open()
-
-    def load(self, path, filename):
-        import os
-        self.parent.add_script(os.path.join(path, filename[0]))
-
-        self.dismiss_popup()
 
 
 from kivy.uix.tabbedpanel import TabbedPanel
@@ -111,14 +109,20 @@ class MainWindow(TabbedPanel):
         super(MainWindow, self).__init__()
         self.add_widget(ManageScripts())
 
-    def add_script(self, script_name):
-        self.add_widget(ScriptPage(script=script_name))
+    def add_script(self, script_path, script_names, action=None):
+        for script_name in script_names:
+            self.add_widget(ScriptPage(script_name=script_name.split('/')[-1], script_path=script_path))
+        if action is not None:
+            action()
 
 
 from kivy.app import App
+from kivy.properties import ObjectProperty
 class AutomationApp(App):
+    window = ObjectProperty()
     def build(self):
-        return MainWindow()
+        self.window = MainWindow()
+        return self.window
 
 
 if __name__ == "__main__":
