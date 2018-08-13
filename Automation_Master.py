@@ -23,6 +23,13 @@
 #         dismiss_func()
 
 
+from kivy.uix.floatlayout import FloatLayout
+from kivy.properties import ObjectProperty
+class LoadDialog(FloatLayout):
+    load = ObjectProperty(None)
+    cancel = ObjectProperty(None)
+
+
 from kivy.uix.textinput import TextInput
 from kivy.properties import StringProperty
 class StringInput(TextInput):
@@ -75,8 +82,27 @@ class ScriptPage(TabbedPanelItem):
 
 
 from kivy.uix.tabbedpanel import TabbedPanelItem
+from kivy.properties import ObjectProperty
 class ManageScripts(TabbedPanelItem):
-    pass
+    loadfile = ObjectProperty(None)
+    savefile = ObjectProperty(None)
+    text_input = ObjectProperty(None)
+
+    def dismiss_popup(self):
+        self._popup.dismiss()
+
+    def show_load(self):
+        content = LoadDialog(load=self.load, cancel=self.dismiss_popup)
+        from kivy.uix.popup import Popup
+        self._popup = Popup(title="Load file", content=content,
+                            size_hint=(0.9, 0.9))
+        self._popup.open()
+
+    def load(self, path, filename):
+        import os
+        self.parent.add_script(os.path.join(path, filename[0]))
+
+        self.dismiss_popup()
 
 
 from kivy.uix.tabbedpanel import TabbedPanel
@@ -84,10 +110,9 @@ class MainWindow(TabbedPanel):
     def __init__(self):
         super(MainWindow, self).__init__()
         self.add_widget(ManageScripts())
-        import os
-        for curfile in os.listdir(os.getcwd()):
-            if curfile.endswith(".py") and curfile != __file__.split('/')[-1] and curfile.lower() == curfile:
-                self.add_widget(ScriptPage(script=curfile))
+
+    def add_script(self, script_name):
+        self.add_widget(ScriptPage(script=script_name))
 
 
 from kivy.app import App
