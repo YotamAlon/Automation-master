@@ -74,10 +74,16 @@ class ScriptPage(TabbedPanelItem):
         self.output = output
 
 
+from kivy.uix.tabbedpanel import TabbedPanelItem
+class ManageScripts(TabbedPanelItem):
+    pass
+
+
 from kivy.uix.tabbedpanel import TabbedPanel
 class MainWindow(TabbedPanel):
-    def __init__(self, **kwargs):
-        super(MainWindow, self).__init__(**kwargs)
+    def __init__(self):
+        super(MainWindow, self).__init__()
+        self.add_widget(ManageScripts())
         import os
         for curfile in os.listdir(os.getcwd()):
             if curfile.endswith(".py") and curfile != __file__.split('/')[-1] and curfile.lower() == curfile:
