@@ -105,22 +105,37 @@ class ManageScripts(TabbedPanelItem):
 
 
 from kivy.uix.tabbedpanel import TabbedPanel
+from kivy.properties import StringProperty, ObjectProperty
 class MainWindow(TabbedPanel):
+    db = ObjectProperty()
+
     def __init__(self):
         super(MainWindow, self).__init__()
+        self.load_db()
         self.add_widget(ManageScripts())
+        print(list(self.db.scripts.find()))
+        for script in self.db.scripts.find():
+            self.add_script(script_path=script['path'], script_names=[script['name']])
 
     def add_script(self, script_path, script_names, action=None):
         for script_name in script_names:
             self.add_widget(ScriptPage(script_name=script_name.split('/')[-1], script_path=script_path))
+            if not self.db.scripts.find_one({'name': script_name.split('/')[-1], 'path': script_path}):
+                self.db.scripts.insert_one({'name': script_name.split('/')[-1], 'path': script_path})
         if action is not None:
             action()
+
+    def load_db(self):
+        from pymongo import MongoClient
+        client = MongoClient()
+        self.db = client.AM
 
 
 from kivy.app import App
 from kivy.properties import ObjectProperty
 class AutomationApp(App):
     window = ObjectProperty()
+
     def build(self):
         self.window = MainWindow()
         return self.window
