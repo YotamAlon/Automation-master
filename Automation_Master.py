@@ -23,17 +23,19 @@
 #         dismiss_func()
 
 
-from kivy.uix.textinput import TextInput
+from kivy.uix.boxlayout import BoxLayout
 from kivy.properties import StringProperty
-class StringInput(TextInput):
+class StringInput(BoxLayout):
     input_name = StringProperty()
     input_value = StringProperty()
     default = StringProperty()
 
-    def __init__(self, name, default):
+    def __init__(self, name, default=None):
         super(StringInput, self).__init__()
         self.input_name = name
-        self.default = default
+        self.default = 'None' if default is None else default
+        if default is not None:
+            self.input_value = default
 
 
 from kivy.uix.tabbedpanel import TabbedPanelItem
@@ -52,7 +54,6 @@ class ScriptPage(TabbedPanelItem):
         self.params = self.parse_script_inputs()
 
         for param in self.params:
-            print(param.annotation)
             self.add_widget(StringInput(param.name, param.default if param.default != param.empty else None))
 
     def parse_script_inputs(self):
@@ -70,7 +71,7 @@ class ScriptPage(TabbedPanelItem):
         self.status = 'Script Loaded'
 
         from inspect import signature
-        return signature(self.main).parameters
+        return signature(self.main).parameters.values()
 
     def run_script(self):
         from CaptureStdout import CaptureStdout

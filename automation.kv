@@ -34,32 +34,15 @@
             on_press: root.run_script()
         TextInput:
             multiline: True
+            readonly: True
             text: '\n'.join(root.output)
 
 <StringInput>:
+    size_hint: (0.5, 0.2)
     Label:
-        size_hint_y: .2
-        text: self.input_name
-        font_size: self.height -10
-    Label:
-        size_hint_y: .1
-        text: self.input_help
-        font_size: self.height -10
+        text: root.input_name
     TextInput:
-        on_text_change: self.input_value = self.text #need to change function name
-
-<FileInput>:
-    Label:
-        size_hint_y: .2
-        text: self.input_name
-        font_size: self.height -10
-    Label:
-        size_hint_y: .1
-        text: self.input_help
-        font_size: self.height -10
-    Button:
-        text: 'Choose File'
-        on_press: root.open_popup()
+        text: root.input_value
 
 <LoadDialog>:
     BoxLayout:
