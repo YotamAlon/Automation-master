@@ -105,30 +105,55 @@ class ManageScripts(TabbedPanelItem):
 
 
 from kivy.uix.tabbedpanel import TabbedPanel
-from kivy.properties import StringProperty, ObjectProperty
+from kivy.properties import ObjectProperty, ListProperty
 class MainWindow(TabbedPanel):
     db = ObjectProperty()
+    script_list = ListProperty()
 
     def __init__(self):
         super(MainWindow, self).__init__()
-        self.load_db()
         self.add_widget(ManageScripts())
-        print(list(self.db.scripts.find()))
-        for script in self.db.scripts.find():
-            self.add_script(script_path=script['path'], script_names=[script['name']])
+        self.load_db()
 
-    def add_script(self, script_path, script_names, action=None):
+    def add_scripts(self, script_path, script_names):
         for script_name in script_names:
-            self.add_widget(ScriptPage(script_name=script_name.split('/')[-1], script_path=script_path))
-            if not self.db.scripts.find_one({'name': script_name.split('/')[-1], 'path': script_path}):
-                self.db.scripts.insert_one({'name': script_name.split('/')[-1], 'path': script_path})
-        if action is not None:
-            action()
+            self.add_script(script_path, script_name)
+
+        return True
+
+    def add_script(self, script_path, script_name):
+        self.add_widget(ScriptPage(script_name=script_name.split('/')[-1], script_path=script_path))
+        if not self.db.scripts.find_one({'name': script_name.split('/')[-1], 'path': script_path}):
+            self.db.scripts.insert_one({'name': script_name.split('/')[-1], 'path': script_path})
+        self.script_list.append(script_name)
+
+    def remove_script(self, script_name, script_path):
+        for tab in self.tab_list:
+            if hasattr(tab, 'script_name') and hasattr(tab, 'script_path') \
+                    and tab.script_name == script_name and tab.script_path == script_path:
+                self.remove_widget(tab)
+                break
+        else:
+            pass  # open popup
+
+        if self.db is not None:
+            self.db.scripts.remove({'name': script_name, 'path': script_path})
 
     def load_db(self):
         from pymongo import MongoClient
         client = MongoClient()
         self.db = client.AM
+        for script in self.db.scripts.find():
+            self.add_script(script_path=script['path'], script_name=script['name'])
+
+    def clean_db(self):
+        from pymongo import MongoClient
+        client = MongoClient()
+        for tab in self.tab_list:
+            if type(tab) == ScriptPage:
+                self.remove_script(script_path=tab.script_path, script_name=tab.script_name)
+
+        client.AM.scripts.remove()
 
 
 from kivy.app import App

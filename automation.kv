@@ -12,15 +12,12 @@
             Button:
                 text: 'Load'
                 on_release: root.show_load()
-
+            Button:
+                text: 'Clean Database'
+                on_release: app.window.clean_db()
         BoxLayout:
-            TextInput:
-                id: text_input
-                text: ''
-
-            RstDocument:
-                text: text_input.text
-                show_errors: True
+            RecycleView:
+                #data: app.window.script_list
 
 <ScriptPage>:
     text: self.script_name
@@ -61,4 +58,4 @@
 
             Button:
                 text: "Load"
-                on_release: app.window.add_script(filechooser.path, filechooser.selection, action=root.dismiss)
+                on_release: app.window.add_scripts(filechooser.path, filechooser.selection) and root.dismiss()
